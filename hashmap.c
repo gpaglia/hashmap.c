@@ -15,6 +15,16 @@ static void (*_free)(void *) = NULL;
 #define hmmalloc (_malloc?_malloc:malloc)
 #define hmfree (_free?_free:free)
 
+#if defined(__cplusplus)
+#define UNUSED(x)       // = nothing
+#elif defined(__GNUC__)
+#define UNUSED(x)       x##_UNUSED __attribute__((unused))
+#else
+#define UNUSED(x)       x##_UNUSED
+#endif
+
+#define FT __attribute__((fallthrough))
+
 // hashmap_set_allocator allows for configuring a custom allocator for
 // all hashmap library operations. This function, if needed, should be called
 // only once at startup and a prior to calling hashmap_new().
@@ -89,7 +99,7 @@ struct hashmap *hashmap_new(size_t elsize, size_t cap,
                                            void *udata),
                             void *udata)
 {
-    int ncap = 16;
+    size_t ncap = 16;
     if (cap < ncap) {
         cap = ncap;
     } else {
@@ -411,12 +421,12 @@ static uint64_t SIP64(const uint8_t *in, const size_t inlen,
     const int left = inlen & 7;
     uint64_t b = ((uint64_t)inlen) << 56;
     switch (left) {
-    case 7: b |= ((uint64_t)in[6]) << 48;
-    case 6: b |= ((uint64_t)in[5]) << 40;
-    case 5: b |= ((uint64_t)in[4]) << 32;
-    case 4: b |= ((uint64_t)in[3]) << 24;
-    case 3: b |= ((uint64_t)in[2]) << 16;
-    case 2: b |= ((uint64_t)in[1]) << 8;
+    case 7: b |= ((uint64_t)in[6]) << 48; FT;
+    case 6: b |= ((uint64_t)in[5]) << 40; FT;
+    case 5: b |= ((uint64_t)in[4]) << 32; FT;
+    case 4: b |= ((uint64_t)in[3]) << 24; FT;
+    case 3: b |= ((uint64_t)in[2]) << 16; FT;
+    case 2: b |= ((uint64_t)in[1]) << 8; FT;
     case 1: b |= ((uint64_t)in[0]); break;
     case 0: break;
     }
@@ -512,7 +522,7 @@ uint64_t hashmap_sip(const void *data, size_t len,
 
 // hashmap_murmur returns a hash value for `data` using Murmur3_86_128.
 uint64_t hashmap_murmur(const void *data, size_t len, 
-                        uint64_t seed0, uint64_t seed1)
+                        uint64_t seed0, uint64_t UNUSED(seed1))
 {
     char out[16];
     MM86128(data, len, seed0, &out);
